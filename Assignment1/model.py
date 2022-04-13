@@ -49,12 +49,16 @@ class Prototypical_Network(Model):
         reshaped_q = tf.reshape(query, (n_way * n_query, self.w, self.h,self.c))
         
         # Embeddings are in the shape of (n_support+n_query, 64)
-        embeddings = self.encoder(tf.concat([reshaped_s, reshaped_q], axis=0))
         
+        embeddings = self.encoder(tf.concat([reshaped_s, reshaped_q], axis=0))
+     
         # Support prototypes are in the shape of (n_way, n_support, 64)
         s_prototypes = tf.reshape(embeddings[:n_way * n_support], [n_way, n_support, embeddings.shape[-1]])
         # Find the average of prototypes for each class in n_way
+       
         s_prototypes = tf.math.reduce_mean(s_prototypes, axis=1)
+    
+   
         # Query embeddings are the remainding embeddings
         q_embeddings = embeddings[n_way * n_support:]
         
@@ -68,8 +72,13 @@ class Prototypical_Network(Model):
             # Then, use these distances to calculate
             # both the loss and the accuracy of the model.
             # HINT: you can use tf.nn.log_softmax()
-            
-
+        s_prototypes = tf.tile(s_prototypes,[q_embeddings.shape[0],1])
+  
+        q_embeddings = tf.repeat(q_embeddings, n_way, axis=0)
+        dist = tf.math.reduce_sum(tf.square(s_prototypes-q_embeddings),axis=1)
+        dist = tf.reshape(-dist, (-1,n_way))
+        
+        loss = tf.reduce_sum(tf.nn.log_softmax(dist,axis=-1))
         ##################################################
         
         return loss, acc
