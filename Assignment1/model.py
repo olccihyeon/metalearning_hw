@@ -72,16 +72,42 @@ class Prototypical_Network(Model):
             # Then, use these distances to calculate
             # both the loss and the accuracy of the model.
             # HINT: you can use tf.nn.log_softmax()
+
+        y = np.tile(np.arange(n_way)[:, np.newaxis], (1, n_query))
+        y_onehot = tf.cast(tf.one_hot(y, n_way), tf.float32)
+
         s_prototypes = tf.tile(s_prototypes,[q_embeddings.shape[0],1])
-  
         q_embeddings = tf.repeat(q_embeddings, n_way, axis=0)
-        dist = tf.math.reduce_sum(tf.square(s_prototypes-q_embeddings),axis=1)
-        dist = tf.reshape(-dist, (-1,n_way))
         
-        loss = tf.reduce_sum(tf.nn.log_softmax(dist,axis=-1))
+        dist = tf.math.reduce_sum(tf.square(s_prototypes-q_embeddings),axis=1)
+        dist = tf.reshape(dist, (-1,n_way))
+
+
+        log_p_y = tf.nn.log_softmax(-dist, axis=-1)
+        log_p_y = tf.reshape(log_p_y, [n_way, n_query, -1])
+       
+        
+        loss = -tf.reduce_mean(tf.reshape(tf.reduce_sum(tf.multiply(y_onehot, log_p_y), axis=-1), [-1]))
+        
+        eq = tf.cast(tf.equal(
+            tf.cast(tf.argmax(log_p_y, axis=-1), tf.int32), 
+            tf.cast(y, tf.int32)), tf.float32)
+        acc = tf.reduce_mean(eq)
+        
         ##################################################
         
         return loss, acc
+    
+    def dist(self, x, y):
+        
+        n = x.shape[0]
+        d = x.shape[1]
+        m = y.shape[0]
+        
+        t1 = tf.reshape(x, (n, 1, d))
+        t2 = tf.reshape(y, (1, m, d))
+        
+        return tf.norm(t1-t2, ord='euclidean', axis=2)
     
     
     
