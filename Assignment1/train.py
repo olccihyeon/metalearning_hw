@@ -39,6 +39,8 @@ def train_model(train_dataset, val_dataset, n_tasks:int, n_epochs:int=20, n_tpe:
 
         val_losses.append(val_loss.result().numpy())
         val_accs.append(val_acc.result().numpy())
+        train_losses.append(train_loss.result().numpy())
+        train_accs.append(train_acc.result().numpy())
         
     model = Prototypical_Network()
     optimizer = tf.keras.optimizers.Adam()

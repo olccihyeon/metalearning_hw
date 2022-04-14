@@ -79,7 +79,7 @@ class DataLoader(object):
         for img in s:
             fig, axs = plt.subplots(1, self.n_support, figsize=(self.n_support, self.n_way))
             for i in range(self.n_support):
-                axs[i].imshow(img[i], cmap='gray')
+                axs[i].imshow(img[i].squeeze(), cmap='gray')
                 axs[i].axis('off')
 
         plt.show()
@@ -111,8 +111,7 @@ class DataLoader(object):
             for j in range(self.n_query):
                 query[index,j,:,:]+= self.data[key][self.n_support+j]
             
-        support = support.squeeze()
-        query = query.squeeze()
+      
             
 
         ##################################################
@@ -130,7 +129,11 @@ class DataLoader(object):
         ############### Your code here ###################
             # TODO: Find numbers for n_way, n_support, n_query
             # where n_way * (n_support + n_query) == 30
-        
+        index = np.random.choice([a for a in range(len(n_ways))], 1)[0]
+        n_way = n_ways[index]
+        n_shot = n_shots[index]
+        n_support = np.random.choice([a for a in range(1, n_shot)], 1)[0]      
+        n_query = n_shot - n_support
 
         ##################################################
 
@@ -149,7 +152,22 @@ class DataLoader(object):
             # create a support and query dataset with shapes
             # (n_way, n_support/n_query, 28, 28, 1)
             # (Same as in the data_generator method)
+        cnt = 0
+        
+        for n,k in task.items():
+            data_num = len(k)
+            
+            k = np.array(k)
+            data_idx = np.random.choice(data_num, n_shot, replace=False)
+            support_idx = data_idx[:n_support]
+            query_idx = data_idx[n_support:]
 
+
+            support[cnt] = k[support_idx]
+            query[cnt] = k[query_idx]      
+            
+            way_cnt += 1
+            
         ##################################################
         
         return support, query
